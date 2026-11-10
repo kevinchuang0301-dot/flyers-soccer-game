@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>A2 Flyers 足球單字挑戰</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,"Noto Sans TC",sans-serif;background:#101d30;color:white;text-align:center}
+main{max-width:600px;margin:auto;padding:12px}h1{font-size:24px;margin:8px}.info{display:flex;justify-content:space-between;padding:8px 16px;font-weight:bold}
+.field{height:360px;position:relative;overflow:hidden;border:3px solid #d8f5e5;border-radius:18px;background:linear-gradient(#7bcaf5 0 32%,#348f50 32% 100%);perspective:550px}
+.field:before{content:"";position:absolute;left:10%;right:10%;bottom:-45%;height:110%;border:3px solid #ffffff88;transform:perspective(220px) rotateX(48deg);border-radius:50%}
+.goal{position:absolute;top:87px;left:22%;width:56%;height:112px;border:7px solid white;border-bottom:3px solid white;background:repeating-linear-gradient(0deg,transparent 0 16px,#ffffff50 17px 18px),repeating-linear-gradient(90deg,#1d693f80 0 19px,#ffffff55 20px 21px);box-shadow:0 0 0 2px #466}
+.keeper{position:absolute;top:121px;left:calc(50% - 26px);width:52px;height:78px;z-index:3;transform-origin:50% 85%;transition:transform .7s cubic-bezier(.2,.7,.3,1)}
+.keeper svg{width:100%;height:100%;filter:drop-shadow(2px 3px 2px #0006)}
+.keeper.dive-left{transform:translate(-65px,12px) rotate(-55deg)}
+.keeper.dive-right{transform:translate(65px,12px) rotate(55deg)}
+.keeper.dive-centre{transform:translateY(-15px) scale(1.12)}
+.player.shoot{animation:shoot .55s ease-in-out}
+@keyframes shoot{0%{transform:translateY(0)}45%{transform:translateY(-10px) rotate(-10deg)}100%{transform:translateY(0) rotate(8deg)}}
+.player{position:absolute;bottom:18px;left:calc(50% - 35px);font-size:72px;filter:drop-shadow(2px 6px 2px #0006)}
+.ball{position:absolute;top:296px;left:calc(50% + 19px);font-size:34px;z-index:4;transform-origin:center;will-change:top,left,transform;transition:top 1s cubic-bezier(.3,.15,.7,1),left 1s ease-out,transform 1s ease-in}
+.ball.flying{top:var(--target-top);left:var(--target-left);transform:scale(.34) rotate(var(--spin))}
+.ball.saved{z-index:5}
+.ball.rebound{top:var(--rebound-top);left:var(--rebound-left);transform:scale(.52) rotate(var(--rebound-spin));transition:top .55s cubic-bezier(.12,.65,.55,1),left .55s ease-out,transform .55s ease-out}
+.ball.instant-reset{transition:none!important}
+.message.wrong{color:#ff4141;text-shadow:0 3px 0 #5e1010,0 5px 15px #000a}.player.sad{animation:none;font-size:66px}.message{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;z-index:12;pointer-events:none;font-size:clamp(38px,10vw,62px);line-height:1.2;font-weight:1000;color:#ffed70;text-shadow:2px 3px #1c2d35;white-space:normal;overflow-wrap:anywhere}
+.panel{background:#20334a;border-radius:16px;padding:14px;margin-top:12px}#question{font-size:23px;margin:6px 0 15px}.answers{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button{border:0;border-radius:12px;background:#f4f6fb;color:#132d44;padding:15px 5px;font-size:19px;font-weight:700;cursor:pointer}
+button:disabled{opacity:.65}
+button.correct-answer,button.correct-answer:disabled{background:#48e28c;color:#083d23;opacity:1;box-shadow:0 0 0 3px #c8ffe0,0 0 18px #48e28c99;animation:answer-glow .8s ease-in-out infinite alternate}
+button.wrong-answer,button.wrong-answer:disabled{background:#ff7777;color:#4c1010;opacity:1}
+@keyframes answer-glow{from{box-shadow:0 0 0 2px #c8ffe0,0 0 8px #48e28c88}to{box-shadow:0 0 0 4px #c8ffe0,0 0 23px #48e28ccc}}#next{background:#ffda60;margin-top:12px;width:100%;display:none}
+.small{font-size:13px;color:#bfd2e1;margin-top:12px}
+</style>
+</head>
+<body><main>
+<h1>⚽ A2 Flyers 足球單字挑戰</h1>
+<div class="info"><span id="score">進球：0</span><span id="count">第 1 題</span></div>
+<div class="field"><div class="goal"></div><div id="keeper" class="keeper" aria-label="守門員">
+<svg viewBox="0 0 60 90" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="守門員">
+<ellipse cx="30" cy="85" rx="23" ry="4" fill="#143d2b" opacity=".4"/>
+<path d="M21 59 L15 78 L23 82 L31 63 M38 59 L46 78 L38 82 L30 63" fill="#1c2f53" stroke="#122039" stroke-width="4" stroke-linejoin="round"/>
+<path d="M18 29 L7 42 L2 37 M42 29 L53 42 L58 37" fill="none" stroke="#f1b98b" stroke-width="8" stroke-linecap="round"/>
+<path d="M15 27 Q30 19 45 27 L42 61 L18 61 Z" fill="#f5aa23" stroke="#633e19" stroke-width="2"/>
+<path d="M18 29 L18 57 M42 29 L42 57" stroke="#ffd76b" stroke-width="3"/>
+<circle cx="30" cy="14" r="12" fill="#f1b98b"/><path d="M18 12 Q18 -1 31 2 Q44 1 42 13 L38 9 L24 9 Z" fill="#272c38"/>
+<circle cx="26" cy="15" r="1.3" fill="#222"/><circle cx="34" cy="15" r="1.3" fill="#222"/>
+<circle cx="3" cy="36" r="6" fill="#eef7ff" stroke="#456ba0" stroke-width="2"/><circle cx="57" cy="36" r="6" fill="#eef7ff" stroke="#456ba0" stroke-width="2"/>
+</svg></div><div id="player" class="player">🏃</div><div id="ball" class="ball">⚽</div><div id="message" class="message"></div></div>
+<div class="panel"><div id="question"></div><div class="answers" id="answers"></div><button id="next">下一題 ➜</button></div>
+<p class="small">選對單字就射門得分！答錯會被守門員擋下。</p>
+</main>
+<script>
+const words=[
+	{zh:"冒險",en:"adventure",opts:["adventure","accident","address","activity"]},
+	{zh:"宇航員",en:"astronaut",opts:["astronaut","artist","actor","athlete"]},
+	{zh:"比賽；競賽",en:"competition",opts:["conversation","competition","collection","condition"]},
+	{zh:"危險的",en:"dangerous",opts:["delicious","dangerous","different","difficult"]},
+	{zh:"發現",en:"discover",opts:["describe","decide","discover","disappear"]},
+	{zh:"環境",en:"environment",opts:["equipment","environment","entrance","example"]},
+	{zh:"著名的",en:"famous",opts:["fantastic","famous","friendly","foreign"]},
+	{zh:"改善；進步",en:"improve",opts:["imagine","invite","improve","include"]},
+	{zh:"發明",en:"invent",opts:["introduce","invent","invite","improve"]},
+	{zh:"神祕的",en:"mysterious",opts:["modern","mysterious","musical","missing"]},
+	{zh:"吵鬧的",en:"noisy",opts:["nervous","normal","noisy","narrow"]},
+	{zh:"乘客",en:"passenger",opts:["pilot","passenger","player","painter"]},
+	{zh:"準備",en:"prepare",opts:["prefer","prepare","protect","promise"]},
+	{zh:"修理",en:"repair",opts:["repeat","return","repair","remember"]},
+	{zh:"成功的",en:"successful",opts:["surprised","successful","serious","special"]},
+	{zh:"溫度",en:"temperature",opts:["timetable","temperature","telephone","transport"]}
+];
+let index=0,score=0,locked=false;
+const targets=[
+	{left:29,top:105,side:"left"},
+	{left:43,top:113,side:"left"},
+	{left:50,top:98,side:"centre"},
+	{left:57,top:113,side:"right"},
+	{left:69,top:105,side:"right"},
+	{left:36,top:167,side:"left"},
+	{left:64,top:167,side:"right"}
+];
+const $=id=>document.getElementById(id);
+function render(){
+	locked=false;
+	const w=words[index%words.length];
+	$("count").textContent=`第 ${index+1} 題`;
+	$("score").textContent=`進球：${score}`;
+	$("question").textContent=`「${w.zh}」的英文是什麼？`;
+	$("message").textContent="";
+	$("message").classList.remove("wrong");
+	const resetBall=$("ball");
+	resetBall.className="ball instant-reset";
+	resetBall.style.removeProperty("--target-top");
+	$("ball").style.removeProperty("--target-left");
+	resetBall.style.removeProperty("--spin");
+	resetBall.style.removeProperty("--rebound-top");
+	resetBall.style.removeProperty("--rebound-left");
+	resetBall.style.removeProperty("--rebound-spin");
+	// 先瞬間回到開球點，避免下一題看到足球倒飛回來。
+	void resetBall.offsetWidth;
+	requestAnimationFrame(()=>resetBall.classList.remove("instant-reset"));
+	$("keeper").className="keeper";
+	$("player").className="player";
+	$("player").textContent="🏃";
+	$("next").style.display="none";
+	$("answers").replaceChildren();
+	for(const choice of [...w.opts].sort(()=>Math.random()-.5)){
+		const b=document.createElement("button");
+		b.textContent=choice;
+		b.onclick=()=>answer(choice,w.en);
+		$("answers").append(b);
+	}
+}
+function answer(choice,correct){
+	if(locked)return;
+	locked=true;
+	const right=choice===correct;
+	for(const b of $("answers").children){
+		b.disabled=true;
+		if(b.textContent===correct)b.classList.add("correct-answer");
+		else if(!right&&b.textContent===choice)b.classList.add("wrong-answer");
+	}
+	const target=targets[Math.floor(Math.random()*targets.length)];
+	const keeperSide=right
+		? (target.side==="left"?"right":"left")
+		: target.side;
+	// 答錯時球停在守門員的撲救位置，不能飛進球網。
+	const savePosition=keeperSide==="left"?35:keeperSide==="right"?61:50;
+	const landingTop=right?target.top:171;
+	const landingLeft=right?target.left:savePosition;
+	const ball=$("ball");
+	ball.style.setProperty("--target-top",`${landingTop}px`);
+	ball.style.setProperty("--target-left",`${landingLeft}%`);
+	ball.style.setProperty("--spin",`${Math.floor(480+Math.random()*480)}deg`);
+	$("player").classList.add("shoot");
+	$("keeper").classList.add(`dive-${keeperSide}`);
+	setTimeout(()=>ball.classList.add("flying",...(right?[]:["saved"])),180);
+	if(!right){
+		// 守門員碰到球後，足球向球場前方、側邊彈開，不停在球門內。
+		const reboundLeft=keeperSide==="left"?31:keeperSide==="right"?65:Math.random()<.5?42:58;
+		ball.style.setProperty("--rebound-top",`${187+Math.floor(Math.random()*18)}px`);
+		ball.style.setProperty("--rebound-left",`${reboundLeft}%`);
+		ball.style.setProperty("--rebound-spin",`${Math.floor(850+Math.random()*500)}deg`);
+		setTimeout(()=>ball.classList.add("rebound"),1210);
+	}
+	if(right)score++;
+	setTimeout(()=>{
+		$("message").textContent=right?"GOAL! ⚽":"答錯了！撲救成功！";
+		if(!right){
+			$("message").classList.add("wrong");
+			$("player").textContent="😢";
+			$("player").classList.add("sad");
+		}
+		$("question").textContent=right?`答對了！${correct} 🎉`:`答錯了！正確答案：${correct}`;
+		$("score").textContent=`進球：${score}`;
+		$("next").style.display="block";
+	},950);
+}
+$("next").onclick=()=>{index++;render()};
+render();
+</script></body></html>
