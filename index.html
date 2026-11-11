@@ -26,6 +26,15 @@ main{max-width:600px;margin:auto;padding:12px}h1{font-size:24px;margin:8px}.info
 .panel{background:#20334a;border-radius:16px;padding:14px;margin-top:12px}#question{font-size:23px;margin:6px 0 15px}.answers{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 button{border:0;border-radius:12px;background:#f4f6fb;color:#132d44;padding:15px 5px;font-size:19px;font-weight:700;cursor:pointer}
 button:disabled{opacity:.65}
+.answer-option{display:flex;align-items:stretch;min-width:0;overflow:hidden;background:#f4f6fb;border-radius:12px}
+.answer-option button{background:transparent;border-radius:0}
+.answer-option .answer-choice{flex:1;min-width:0;overflow-wrap:anywhere}
+.answer-option .speak-button{flex:0 0 48px;padding:10px 4px;border-left:1px solid #bccbd9;font-size:23px}
+.answer-option.correct-answer{background:#48e28c;color:#083d23;box-shadow:0 0 0 3px #c8ffe0,0 0 18px #48e28c99}
+.answer-option.wrong-answer{background:#ff7777;color:#4c1010}
+.answer-option.correct-answer .answer-choice,.answer-option.wrong-answer .answer-choice{color:inherit}
+.answer-option .speak-button:disabled{opacity:.65}
+
 button.correct-answer,button.correct-answer:disabled{background:#48e28c;color:#083d23;opacity:1;box-shadow:0 0 0 3px #c8ffe0,0 0 18px #48e28c99;animation:answer-glow .8s ease-in-out infinite alternate}
 button.wrong-answer,button.wrong-answer:disabled{background:#ff7777;color:#4c1010;opacity:1}
 @keyframes answer-glow{from{box-shadow:0 0 0 2px #c8ffe0,0 0 8px #48e28c88}to{box-shadow:0 0 0 4px #c8ffe0,0 0 23px #48e28ccc}}#next{background:#ffda60;margin-top:12px;width:100%;display:none}
@@ -48,7 +57,7 @@ button.wrong-answer,button.wrong-answer:disabled{background:#ff7777;color:#4c101
 </svg></div><div id="player" class="player">🏃</div><div id="ball" class="ball">⚽</div><div id="message" class="message"></div></div>
 <div class="panel"><div id="question"></div><div class="answers" id="answers"></div><button id="next">下一題 ➜</button></div>
 <p class="small">選對單字就射門得分！答錯會被守門員擋下。</p>
-<p class="small" id="version">版本：20261111100501</p>
+<p class="small" id="version">版本：20261111100502</p>
 </main>
 <script>
 const words=[
@@ -255,6 +264,19 @@ const targets=[
 	{left:64,top:167,side:"right"}
 ];
 const $=id=>document.getElementById(id);
+const speechAvailable="speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
+function speakWord(word){
+	if(!speechAvailable)return;
+	window.speechSynthesis.cancel();
+	const utterance=new SpeechSynthesisUtterance(word);
+	utterance.lang="en-GB";
+	utterance.rate=0.82;
+	const voices=window.speechSynthesis.getVoices();
+	const british=voices.find(v=>v.lang.toLowerCase()==="en-gb");
+	const english=voices.find(v=>v.lang.toLowerCase().startsWith("en"));
+	if(british||english)utterance.voice=british||english;
+	window.speechSynthesis.speak(utterance);
+}
 function render(){
 	locked=false;
 	if(index>0&&index%words.length===0)resetQuestionOrder();
@@ -281,21 +303,35 @@ function render(){
 	$("next").style.display="none";
 	$("answers").replaceChildren();
 	for(const choice of getOptions(w)){
+		const option=document.createElement("div");
+		option.className="answer-option";
 		const b=document.createElement("button");
+		b.className="answer-choice";
 		b.textContent=choice;
 		b.onclick=()=>answer(choice,w.en);
-		$("answers").append(b);
+		const audio=document.createElement("button");
+		audio.className="speak-button";
+		audio.type="button";
+		audio.textContent="🔊";
+		audio.title="聽 "+choice+" 的發音";
+		audio.setAttribute("aria-label","播放 "+choice+" 的英文發音");
+		audio.disabled=!speechAvailable;
+		audio.onclick=()=>speakWord(choice);
+		option.append(b,audio);
+		$("answers").append(option);
 	}
 }
 function answer(choice,correct){
 	if(locked)return;
 	locked=true;
 	const right=choice===correct;
-	for(const b of $("answers").children){
+	for(const option of $("answers").children){
+		const b=option.querySelector(".answer-choice");
 		b.disabled=true;
-		if(b.textContent===correct)b.classList.add("correct-answer");
-		else if(!right&&b.textContent===choice)b.classList.add("wrong-answer");
+		if(b.textContent===correct)option.classList.add("correct-answer");
+		else if(!right&&b.textContent===choice)option.classList.add("wrong-answer");
 	}
+	speakWord(correct);
 	const target=targets[Math.floor(Math.random()*targets.length)];
 	const keeperSide=right
 		? (target.side==="left"?"right":"left")
