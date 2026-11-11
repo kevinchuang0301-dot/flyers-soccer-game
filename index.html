@@ -39,6 +39,25 @@ button.correct-answer,button.correct-answer:disabled{background:#48e28c;color:#0
 button.wrong-answer,button.wrong-answer:disabled{background:#ff7777;color:#4c1010;opacity:1}
 @keyframes answer-glow{from{box-shadow:0 0 0 2px #c8ffe0,0 0 8px #48e28c88}to{box-shadow:0 0 0 4px #c8ffe0,0 0 23px #48e28ccc}}#next{background:#ffda60;margin-top:12px;width:100%;display:none}
 .small{font-size:13px;color:#bfd2e1;margin-top:12px}
+@media (max-width:480px){
+	main{padding:6px 9px calc(6px + env(safe-area-inset-bottom))}
+	h1{font-size:20px;margin:3px 0 5px}
+	.info{padding:4px 10px;font-size:14px}
+	.field{height:clamp(235px,37dvh,305px);border-radius:13px}
+	.goal{top:24.17%;height:31.11%}
+	.keeper{top:33.61%;height:21.67%}
+	.player{bottom:5%;font-size:59px}
+	.player.sad{font-size:56px}
+	.ball{top:82.22%;font-size:29px}
+	.panel{padding:10px;margin-top:7px;border-radius:12px}
+	#question{font-size:19px;margin:3px 0 9px}
+	.answers{gap:7px}
+	.answer-option .answer-choice{font-size:16px;padding:11px 3px}
+	.answer-option .speak-button{flex-basis:40px;padding:8px 3px;font-size:20px}
+	#next{margin-top:7px;padding:10px;font-size:17px}
+	.small{font-size:11px;margin:5px 0 0}
+	.message{font-size:clamp(34px,10vw,48px)}
+}
 </style>
 </head>
 <body><main>
@@ -57,7 +76,7 @@ button.wrong-answer,button.wrong-answer:disabled{background:#ff7777;color:#4c101
 </svg></div><div id="player" class="player">🏃</div><div id="ball" class="ball">⚽</div><div id="message" class="message"></div></div>
 <div class="panel"><div id="question"></div><div class="answers" id="answers"></div><button id="next">下一題 ➜</button></div>
 <p class="small">選對單字就射門得分！答錯會被守門員擋下。</p>
-<p class="small" id="version">版本：20261111100502</p>
+<p class="small" id="version">版本：20261111100503</p>
 </main>
 <script>
 const words=[
@@ -341,7 +360,7 @@ function answer(choice,correct){
 	const landingTop=right?target.top:171;
 	const landingLeft=right?target.left:savePosition;
 	const ball=$("ball");
-	ball.style.setProperty("--target-top",`${landingTop}px`);
+	ball.style.setProperty("--target-top",`${landingTop/360*100}%`);
 	ball.style.setProperty("--target-left",`${landingLeft}%`);
 	ball.style.setProperty("--spin",`${Math.floor(480+Math.random()*480)}deg`);
 	$("player").classList.add("shoot");
@@ -350,7 +369,7 @@ function answer(choice,correct){
 	if(!right){
 		// 守門員碰到球後，足球向球場前方、側邊彈開，不停在球門內。
 		const reboundLeft=keeperSide==="left"?31:keeperSide==="right"?65:Math.random()<.5?42:58;
-		ball.style.setProperty("--rebound-top",`${187+Math.floor(Math.random()*18)}px`);
+		ball.style.setProperty("--rebound-top",`${(187+Math.floor(Math.random()*18))/360*100}%`);
 		ball.style.setProperty("--rebound-left",`${reboundLeft}%`);
 		ball.style.setProperty("--rebound-spin",`${Math.floor(850+Math.random()*500)}deg`);
 		setTimeout(()=>ball.classList.add("rebound"),1210);
