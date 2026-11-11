@@ -23,6 +23,15 @@ main{max-width:600px;margin:auto;padding:12px}h1{font-size:24px;margin:8px}.info
 .ball.rebound{top:var(--rebound-top);left:var(--rebound-left);transform:scale(.52) rotate(var(--rebound-spin));transition:top .55s cubic-bezier(.12,.65,.55,1),left .55s ease-out,transform .55s ease-out}
 .ball.instant-reset{transition:none!important}
 .message.wrong{color:#ff4141;text-shadow:0 3px 0 #5e1010,0 5px 15px #000a}.player.sad{animation:none;font-size:66px}.message{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;z-index:12;pointer-events:none;font-size:clamp(38px,10vw,62px);line-height:1.2;font-weight:1000;color:#ffed70;text-shadow:2px 3px #1c2d35;white-space:normal;overflow-wrap:anywhere}
+
+/* 進球時，球門兩側同步發射彩炮。 */
+.confetti-layer{position:absolute;inset:0;z-index:9;overflow:hidden;pointer-events:none}
+.confetti-cannon{position:absolute;top:43%;width:0;height:0}
+.confetti-cannon.left{left:17%}.confetti-cannon.right{left:83%}
+.confetti-cannon::before{content:"🎉";position:absolute;left:-21px;top:-22px;font-size:36px;opacity:0;animation:cannon-pop .55s ease-out both}
+.confetti-piece{position:absolute;left:0;top:0;width:var(--w);height:var(--h);background:var(--color);border-radius:2px;opacity:0;transform:translate(0,0) rotate(0deg);animation:confetti-burst var(--duration) ease-out var(--delay) forwards}
+@keyframes cannon-pop{0%{opacity:0;transform:scale(.3)}30%{opacity:1;transform:scale(1.25)}100%{opacity:0;transform:scale(.8)}}
+@keyframes confetti-burst{0%{opacity:0;transform:translate(0,0) rotate(0deg) scale(.5)}12%{opacity:1}55%{opacity:1;transform:translate(calc(var(--dx) * .65),var(--peak)) rotate(calc(var(--spin) * .6)) scale(1)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) rotate(var(--spin)) scale(.85)}}
 .panel{background:#20334a;border-radius:16px;padding:14px;margin-top:12px}#question{font-size:23px;margin:6px 0 15px}.answers{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 button{border:0;border-radius:12px;background:#f4f6fb;color:#132d44;padding:15px 5px;font-size:19px;font-weight:700;cursor:pointer}
 button:disabled{opacity:.65}
@@ -73,10 +82,10 @@ button.wrong-answer,button.wrong-answer:disabled{background:#ff7777;color:#4c101
 <circle cx="30" cy="14" r="12" fill="#f1b98b"/><path d="M18 12 Q18 -1 31 2 Q44 1 42 13 L38 9 L24 9 Z" fill="#272c38"/>
 <circle cx="26" cy="15" r="1.3" fill="#222"/><circle cx="34" cy="15" r="1.3" fill="#222"/>
 <circle cx="3" cy="36" r="6" fill="#eef7ff" stroke="#456ba0" stroke-width="2"/><circle cx="57" cy="36" r="6" fill="#eef7ff" stroke="#456ba0" stroke-width="2"/>
-</svg></div><div id="player" class="player">🏃</div><div id="ball" class="ball">⚽</div><div id="message" class="message"></div></div>
+</svg></div><div id="confetti" class="confetti-layer" aria-hidden="true"></div><div id="player" class="player">🏃</div><div id="ball" class="ball">⚽</div><div id="message" class="message"></div></div>
 <div class="panel"><div id="question"></div><div class="answers" id="answers"></div><button id="next">下一題 ➜</button></div>
 <p class="small">選對單字就射門得分！答錯會被守門員擋下。</p>
-<p class="small" id="version">版本：20261111100503</p>
+<p class="small" id="version">版本：20261111101801</p>
 </main>
 <script>
 const words=[
@@ -296,7 +305,39 @@ function speakWord(word){
 	if(british||english)utterance.voice=british||english;
 	window.speechSynthesis.speak(utterance);
 }
+let confettiCleanup=null;
+function clearConfetti(){
+	if(confettiCleanup!==null){clearTimeout(confettiCleanup);confettiCleanup=null;}
+	$("confetti").replaceChildren();
+}
+function celebrateGoal(){
+	clearConfetti();
+	const colors=["#ffdc43","#ff4c76","#58e6ff","#8bff70","#ba7aff","#ff9e42","#ffffff"];
+	const layer=$("confetti");
+	for(const side of ["left","right"]){
+		const cannon=document.createElement("div");
+		cannon.className="confetti-cannon "+side;
+		for(let i=0;i<32;i++){
+			const piece=document.createElement("i");
+			piece.className="confetti-piece";
+			const dx=(side==="left"?20:-20)+(Math.random()-.5)*210;
+			piece.style.setProperty("--dx",dx.toFixed(0)+"px");
+			piece.style.setProperty("--dy",(40+Math.random()*145).toFixed(0)+"px");
+			piece.style.setProperty("--peak",(-65-Math.random()*115).toFixed(0)+"px");
+			piece.style.setProperty("--spin",((Math.random()-.5)*1300)+"deg");
+			piece.style.setProperty("--w",(4+Math.random()*7)+"px");
+			piece.style.setProperty("--h",(7+Math.random()*9)+"px");
+			piece.style.setProperty("--duration",(1.25+Math.random()*.75)+"s");
+			piece.style.setProperty("--delay",(Math.random()*.15)+"s");
+			piece.style.setProperty("--color",colors[Math.floor(Math.random()*colors.length)]);
+			cannon.append(piece);
+		}
+		layer.append(cannon);
+	}
+	confettiCleanup=setTimeout(()=>{layer.replaceChildren();confettiCleanup=null;},2300);
+}
 function render(){
+	clearConfetti();
 	locked=false;
 	if(index>0&&index%words.length===0)resetQuestionOrder();
 	const w=words[questionOrder[index%words.length]];
@@ -376,6 +417,7 @@ function answer(choice,correct){
 	}
 	if(right)score++;
 	setTimeout(()=>{
+		if(right)celebrateGoal();
 		$("message").textContent=right?"GOAL! ⚽":"答錯了！";
 		if(!right){
 			$("message").classList.add("wrong");
