@@ -144,7 +144,7 @@ function answer(choice,correct){
 	}
 	if(right)score++;
 	setTimeout(()=>{
-		$("message").textContent=right?"GOAL! ⚽":"答錯了！撲救成功！";
+		$("message").textContent=right?"GOAL! ⚽":"答錯了！";
 		if(!right){
 			$("message").classList.add("wrong");
 			$("player").textContent="😢";
